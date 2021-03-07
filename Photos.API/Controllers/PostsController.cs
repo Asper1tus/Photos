@@ -1,8 +1,12 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Photos.API.DataTransferObjects;
+using Photos.Date.CloudStorage;
+using Photos.Date.Entities;
 using Photos.Date.EntityFramework;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Photos.API.Controllers
 {
@@ -11,10 +15,12 @@ namespace Photos.API.Controllers
     public class PostsController : ControllerBase
     {
         readonly ApplicationContext dbContext;
+        readonly ICloudStorage cloudStorage;
 
-        public PostsController(ApplicationContext dbContext)
+        public PostsController(ApplicationContext dbContext, ICloudStorage cloudStorage)
         {
             this.dbContext = dbContext;
+            this.cloudStorage = cloudStorage;
         }
 
         [HttpGet]
@@ -49,34 +55,55 @@ namespace Photos.API.Controllers
             return Ok(posts);
         }
 
-        [HttpGet("{id}/comments")]
-        public ActionResult<List<CommentDTO>> GetComments(int id, [FromQuery] int? skip, [FromQuery] int? quantity)
+        [HttpPost]
+        public async Task<ActionResult<PostDTO>> UploadPhotoAsync([FromBody] UploadPhotoDTO photo)
         {
-            var query = dbContext.Comments.AsQueryable();
+            using var memoryStream = new MemoryStream();
+            var image = photo.Image;
 
-            query.Where(c => c.PostId == id);
+            await image.CopyToAsync(memoryStream);
+            var imageUrl = await cloudStorage.UploadFileAsync(memoryStream, image.FileName);
 
-            if (skip != null)
-                query.Skip(skip.Value);
-
-            if (quantity != null)
-                query.Take(quantity.Value);
-
-            List<CommentDTO> comments = new();
-
-            foreach (var comment in query)
+            Post post = new()
             {
-                CommentDTO commentDto = new()
-                {
-                    CreationDate = comment.CreationDate,
-                    LikesCount = comment.LikesCount,
-                    Text = comment.Text
-                };
+                Description = photo.Description,
+                Title = photo.Title,
+                ImageUrl = imageUrl
+            };
 
-                comments.Add(commentDto);
-            }
+            await dbContext.Posts.AddAsync(post);
 
-            return Ok(comments);
+            PostDTO postDto = new()
+            {
+                Id = post.Id,
+                Title = post.Title,
+                CreationDate = post.CreationDate,
+                Description = post.Description,
+                ImageUrl = post.ImageUrl,
+                LikesCount = post.LikesCount,
+                CommentsCount = post.Comments.Count
+            }; 
+            
+            await dbContext.SaveChangesAsync();
+
+            return Ok(postDto);
+        }
+
+        [HttpPut("{id}")]
+        public async Task<ActionResult> UpdatePost(int id, [FromBody] UpdatePostDTO postDto)
+        {
+            var post = dbContext.Posts.FirstOrDefault(p => p.Id == id);
+
+            if (post == null)
+                return NotFound("Post not found.");
+
+            post.LikesCount = postDto.LikesCount;
+
+            dbContext.Update(post);
+
+            await dbContext.SaveChangesAsync();
+
+            return Ok();
         }
     }
 }

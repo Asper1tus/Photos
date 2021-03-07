@@ -4,10 +4,10 @@ namespace Photos.API.DataTransferObjects
 {
     public record CommentDTO
     {
-        public string Text { get; set; }
+        public string Text { get; init; }
 
-        public int LikesCount { get; set; }
+        public int LikesCount { get; init; }
 
-        public DateTime CreationDate { get; set; }
+        public DateTime CreationDate { get; init; }
     }
 }

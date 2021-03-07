@@ -21,11 +21,8 @@ namespace Photos.Date.CloudStorage
 
         public async Task<string> UploadFileAsync(Stream imageStream, string fileNameForStorage)
         {
-            using (var memoryStream = new MemoryStream())
-            {
-                var dataObject = await storageClient.UploadObjectAsync(bucketName, fileNameForStorage, null, imageStream);
-                return dataObject.MediaLink;
-            }
+            var dataObject = await storageClient.UploadObjectAsync(bucketName, fileNameForStorage, null, imageStream);
+            return dataObject.MediaLink;
         }
 
         public async Task DeleteFileAsync(string fileNameForStorage)
