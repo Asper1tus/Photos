@@ -56,7 +56,7 @@ namespace Photos.API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<PostDTO>> UploadPhotoAsync([FromBody] UploadPhotoDTO photo)
+        public async Task<ActionResult<PostDTO>> UploadPhotoAsync([FromForm] UploadPhotoDTO photo)
         {
             using var memoryStream = new MemoryStream();
             var image = photo.Image;
