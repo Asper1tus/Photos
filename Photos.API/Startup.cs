@@ -26,6 +26,7 @@ namespace Photos.API
             services.AddDbContext<ApplicationContext>(options => options.UseSqlServer(connection)); 
             
             services.AddSingleton<ICloudStorage, GoogleCloudStorage>();
+            services.AddSwaggerGen();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -35,11 +36,17 @@ namespace Photos.API
                 app.UseDeveloperExceptionPage();
             }
 
+            app.UseSwagger();
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Photos API V1"); 
+                c.RoutePrefix = string.Empty;
+            });
+
+
             app.UseHttpsRedirection();
 
             app.UseRouting();
-
-            app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {
