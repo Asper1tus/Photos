@@ -361,3 +361,9 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+/Photos.API/appsettings.json
+/Photos.API/storageKey.json
+/Photos.API/appsettings.Development.json
+/Photos.API/app.yaml
+/Photos.API/Dockerfile
+/Photos.Date/Migrations
