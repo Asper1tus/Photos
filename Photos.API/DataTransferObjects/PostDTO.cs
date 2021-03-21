@@ -3,28 +3,28 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Photos.API.DataTransferObjects
 {
-    public record PostDTO
+    public class PostDTO
     {
         [Required]
 
-        public int Id { get; init; }
+        public int Id { get; set; }
 
         [Required]
-        public string Title { get; init; }
+        public string Title { get; set; }
 
         [Required]
-        public string Description { get; init; }
+        public string Description { get; set; }
 
         [Required]
-        public string ImageUrl { get; init; }
+        public string ImageUrl { get; set; }
 
         [Required]
-        public DateTime CreationDate { get; init; }
+        public DateTime CreationDate { get; set; }
 
         [Required]
-        public int LikesCount { get; init; }
+        public int LikesCount { get; set; }
 
         [Required]
-        public int CommentsCount { get; init; }
+        public int CommentsCount { get; set; }
     }
 }

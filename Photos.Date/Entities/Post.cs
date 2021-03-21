@@ -15,7 +15,7 @@ namespace Photos.Date.Entities
 
         public Post()
         {
-            Comments = new();
+            Comments = new List<Comment>();
             CreationDate = DateTime.Now;
         }
     }

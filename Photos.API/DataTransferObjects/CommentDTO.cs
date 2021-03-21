@@ -3,16 +3,16 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Photos.API.DataTransferObjects
 {
-    public record CommentDTO
+    public class CommentDTO
     {
         [Required]
-        public string Text { get; init; }
+        public string Text { get; set; }
 
         [Required]
-        public int LikesCount { get; init; }
+        public int LikesCount { get; set; }
 
 
         [Required]
-        public DateTime CreationDate { get; init; }
+        public DateTime CreationDate { get; set; }
     }
 }

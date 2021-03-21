@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Photos.API.DataTransferObjects;
+using Photos.API.Extensions;
 using Photos.Date.Entities;
 using Photos.Date.EntityFramework;
 using System.Collections.Generic;
@@ -21,21 +22,20 @@ namespace Photos.API.Controllers
         [HttpGet]
         public ActionResult<List<CommentDTO>> GetComments(int id, [FromQuery] int? skip, [FromQuery] int? quantity)
         {
-            var query = dbContext.Comments.AsQueryable();
+            var post = dbContext.Posts.FirstOrDefault(p => p.Id == id);
 
-            query.Where(c => c.PostId == id);
+            if (post == null)
+                return NotFound("Post not found.");
 
-            if (skip != null)
-                query.Skip(skip.Value);
+            var query = dbContext.Comments.AsQueryable()
+                .Where(c => c.PostId == id)
+                .SkipOrAll(skip)
+                .TakeOrAll(quantity);
 
-            if (quantity != null)
-                query.Take(quantity.Value);
-
-            List<CommentDTO> comments = new();
-
+            var comments = new List<CommentDTO>();
             foreach (var comment in query)
             {
-                CommentDTO commentDto = new()
+                var commentDto = new CommentDTO()
                 {
                     CreationDate = comment.CreationDate,
                     Text = comment.Text
@@ -48,14 +48,14 @@ namespace Photos.API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult> AddCommentAsync(int id, [FromBody] CreateCommentDTO commentDTO)
+        public async Task<ActionResult> AddComment(int id, [FromBody] CreateCommentDTO commentDTO)
         {
             var post = dbContext.Posts.FirstOrDefault(p => p.Id == id);
 
             if (post == null)
                 return NotFound("Post not found.");
 
-            Comment comment = new()
+            var comment = new Comment()
             {
                 Text = commentDTO.Text,
                 Post = post

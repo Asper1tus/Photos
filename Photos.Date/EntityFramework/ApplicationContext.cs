@@ -7,7 +7,6 @@ namespace Photos.Date.EntityFramework
     {
         public ApplicationContext(DbContextOptions<ApplicationContext> options) : base(options)
         {
-            Database.EnsureCreated();
         }
 
         public DbSet<Post> Posts { get; set; }

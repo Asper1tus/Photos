@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Photos.API.DataTransferObjects;
+using Photos.API.Extensions;
 using Photos.Date.CloudStorage;
 using Photos.Date.Entities;
 using Photos.Date.EntityFramework;
@@ -26,19 +28,16 @@ namespace Photos.API.Controllers
         [HttpGet]
         public ActionResult<List<PostDTO>> GetPosts([FromQuery] int? skip, [FromQuery] int? quantity)
         {
-            var query = dbContext.Posts.AsQueryable();
+            var query = dbContext.Posts.Include(p => p.Comments)
+                .AsQueryable()
+                .SkipOrAll(skip)
+                .TakeOrAll(quantity);
 
-            if (skip != null)
-                query.Skip(skip.Value);
-
-            if (quantity != null)
-                query.Take(quantity.Value);
-
-            List<PostDTO> posts = new();
+            var posts = new List<PostDTO>();
 
             foreach (var post in query)
             {
-                PostDTO postDto = new()
+                var postDto = new PostDTO()
                 {
                     Id = post.Id,
                     Title = post.Title,
@@ -56,15 +55,23 @@ namespace Photos.API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<PostDTO>> UploadPhotoAsync([FromForm] UploadPhotoDTO photo)
+        public async Task<ActionResult<PostDTO>> UploadPhoto([FromForm] UploadPhotoDTO photo)
         {
-            using var memoryStream = new MemoryStream();
-            var image = photo.Image;
+            string imageUrl;
+            if (photo.Image != null)
+            {
+                using var memoryStream = new MemoryStream();
+                var image = photo.Image;
 
-            await image.CopyToAsync(memoryStream);
-            var imageUrl = await cloudStorage.UploadFileAsync(memoryStream, image.FileName);
+                await image.CopyToAsync(memoryStream);
+                imageUrl = await cloudStorage.UploadFileAsync(memoryStream, image.FileName);
+            }
+            else
+            {
+                imageUrl = "Url not found.";
+            }
 
-            Post post = new()
+            var post = new Post()
             {
                 Description = photo.Description,
                 Title = photo.Title,
@@ -73,7 +80,7 @@ namespace Photos.API.Controllers
 
             await dbContext.Posts.AddAsync(post);
 
-            PostDTO postDto = new()
+            var postDto = new PostDTO()
             {
                 Id = post.Id,
                 Title = post.Title,
@@ -82,12 +89,13 @@ namespace Photos.API.Controllers
                 ImageUrl = post.ImageUrl,
                 LikesCount = post.LikesCount,
                 CommentsCount = post.Comments.Count
-            }; 
-            
+            };
+
             await dbContext.SaveChangesAsync();
 
             return Ok(postDto);
         }
+
 
         [HttpPut("{id}")]
         public async Task<ActionResult> UpdatePost(int id, [FromBody] UpdatePostDTO postDto)
@@ -100,6 +108,21 @@ namespace Photos.API.Controllers
             post.LikesCount = postDto.LikesCount;
 
             dbContext.Update(post);
+
+            await dbContext.SaveChangesAsync();
+
+            return Ok();
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<ActionResult> DeletePost(int id)
+        {
+            var post = dbContext.Posts.FirstOrDefault(p => p.Id == id);
+
+            if (post == null)
+                return NotFound("Post not found.");
+
+            dbContext.Posts.Remove(post);
 
             await dbContext.SaveChangesAsync();
 

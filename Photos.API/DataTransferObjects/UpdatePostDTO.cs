@@ -2,9 +2,9 @@
 
 namespace Photos.API.DataTransferObjects
 {
-    public record UpdatePostDTO
+    public class UpdatePostDTO
     {
         [Required]
-        public int LikesCount { get; init; }
+        public int LikesCount { get; set; }
     }
 }

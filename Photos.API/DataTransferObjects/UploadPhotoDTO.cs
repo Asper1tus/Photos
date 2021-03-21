@@ -3,15 +3,14 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Photos.API.DataTransferObjects
 {
-    public record UploadPhotoDTO
+    public class UploadPhotoDTO
     {
-        [Required]
-        public IFormFile Image { get; init; }
+        public IFormFile Image { get; set; }
 
         [Required]
-        public string Title { get; init; }
+        public string Title { get; set; }
 
         [Required]
-        public string Description { get; init; }
+        public string Description { get; set; }
     }
 }

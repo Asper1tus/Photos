@@ -20,11 +20,12 @@ namespace Photos.API
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddCors();
             services.AddControllers();
 
             string connection = Configuration.GetConnectionString("DefaultConnection");
-            services.AddDbContext<ApplicationContext>(options => options.UseSqlServer(connection)); 
-            
+            services.AddDbContext<ApplicationContext>(options => options.UseNpgsql(connection));
+
             services.AddSingleton<ICloudStorage, GoogleCloudStorage>();
             services.AddSwaggerGen();
         }
@@ -36,10 +37,15 @@ namespace Photos.API
                 app.UseDeveloperExceptionPage();
             }
 
+            app.UseCors(x => x
+                .AllowAnyOrigin()
+                .AllowAnyMethod()
+                .AllowAnyHeader());
+
             app.UseSwagger();
             app.UseSwaggerUI(c =>
             {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Photos API V1"); 
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Photos API V1");
                 c.RoutePrefix = string.Empty;
             });
 

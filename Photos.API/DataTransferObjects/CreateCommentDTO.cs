@@ -2,9 +2,9 @@
 
 namespace Photos.API.DataTransferObjects
 {
-    public record CreateCommentDTO
+    public class CreateCommentDTO
     {
         [Required]
-        public string Text { get; init; }
+        public string Text { get; set; }
     }
 }
